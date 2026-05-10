@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="AI-powered Customer Churn Prediction System with real-time analytics, explainable AI, and retention recommendations.">
+    <title>ChurnGuard AI &mdash; Customer Churn Prediction</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- Auth Modal -->
+    <div class="modal-overlay" id="authModal">
+        <div class="modal glass-card">
+            <div class="modal-header">
+                <div class="logo-mini">
+                    <svg class="logo-svg" viewBox="0 0 24 24" width="28" height="28"><path d="M12 2L3 7v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-9-5z" fill="url(#logoGrad)"/><defs><linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#818cf8"/><stop offset="100%" stop-color="#6366f1"/></linearGradient></defs></svg>
+                    <span class="modal-brand">ChurnGuard</span>
+                </div>
+                <button class="close-btn" onclick="closeAuthModal()">&times;</button>
+            </div>
+            <div class="auth-tabs">
+                <button class="auth-tab active" id="loginTab" onclick="switchAuth('login')">Sign In</button>
+                <button class="auth-tab" id="signupTab" onclick="switchAuth('signup')">Create Account</button>
+            </div>
+            <form id="loginForm" class="auth-form" onsubmit="handleLogin(event)">
+                <div class="form-group"><label>Username</label><input type="text" id="loginUsername" placeholder="Enter username" required></div>
+                <div class="form-group"><label>Password</label><input type="password" id="loginPassword" placeholder="Enter password" required></div>
+                <button type="submit" class="btn btn-primary btn-full" id="loginBtn">Sign In</button>
+                <p class="auth-error" id="loginError"></p>
+            </form>
+            <form id="signupForm" class="auth-form hidden" onsubmit="handleSignup(event)">
+                <div class="form-group"><label>Username</label><input type="text" id="signupUsername" placeholder="Choose username" required minlength="3"></div>
+                <div class="form-group"><label>Email</label><input type="email" id="signupEmail" placeholder="Enter email" required></div>
+                <div class="form-group"><label>Password</label><input type="password" id="signupPassword" placeholder="Min 6 characters" required minlength="6"></div>
+                <button type="submit" class="btn btn-primary btn-full" id="signupBtn">Create Account</button>
+                <p class="auth-error" id="signupError"></p>
+            </form>
+        </div>
+    </div>
+
+    <!-- Sidebar -->
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <svg class="logo-svg" viewBox="0 0 24 24" width="32" height="32"><path d="M12 2L3 7v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-9-5z" fill="url(#sideGrad)"/><defs><linearGradient id="sideGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#818cf8"/><stop offset="100%" stop-color="#a78bfa"/></linearGradient></defs></svg>
+            <div class="logo-title">
+                <h1 class="logo-text">ChurnGuard</h1>
+                <span class="logo-badge">AI</span>
+            </div>
+        </div>
+        <div class="nav-section-label">MAIN MENU</div>
+        <ul class="nav-list">
+            <li class="nav-item active" data-page="predict" onclick="navigate('predict')">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                <span class="nav-label">Predict</span>
+            </li>
+            <li class="nav-item" data-page="bulk" onclick="navigate('bulk')">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                <span class="nav-label">Bulk Predict</span>
+            </li>
+            <li class="nav-item" data-page="dashboard" onclick="navigate('dashboard')">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
+                <span class="nav-label">Dashboard</span>
+            </li>
+            <li class="nav-item" data-page="eda" onclick="navigate('eda')">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                <span class="nav-label">EDA</span>
+            </li>
+            <li class="nav-item" data-page="history" onclick="navigate('history')">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="10"/></svg>
+                <span class="nav-label">History</span>
+            </li>
+            <li class="nav-item" data-page="chatbot" onclick="navigate('chatbot')">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+                <span class="nav-label">AI Advisor</span>
+            </li>
+        </ul>
+        <div class="sidebar-footer">
+            <div class="user-info" id="userInfo" style="display:none;">
+                <span class="user-avatar" id="userAvatar">U</span>
+                <span class="user-name" id="userName">User</span>
+            </div>
+            <button class="btn btn-outline btn-sm btn-full" id="authBtn" onclick="showAuthModal()">Sign In</button>
+        </div>
+    </nav>
+
+    <!-- Mobile Header -->
+    <header class="mobile-header">
+        <button class="hamburger" onclick="toggleSidebar()">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
+        <span class="mobile-brand">ChurnGuard <span class="logo-badge">AI</span></span>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+
+        <!-- ═══ PREDICT PAGE ═══ -->
+        <section class="page active" id="page-predict">
+            <div class="page-header">
+                <h2>Churn Prediction</h2>
+                <p class="subtitle">Enter customer details to predict churn probability</p>
+            </div>
+            <div class="predict-layout">
+                <div class="predict-form-container glass-card">
+                    <form id="predictForm" onsubmit="handlePredict(event)">
+                        <div class="form-section">
+                            <h3 class="section-title"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="var(--accent-light)" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> Demographics</h3>
+                            <div class="form-grid">
+                                <div class="form-group"><label for="gender">Gender</label><select id="gender"><option value="Male">Male</option><option value="Female">Female</option></select></div>
+                                <div class="form-group"><label for="SeniorCitizen">Senior Citizen</label><select id="SeniorCitizen"><option value="0">No</option><option value="1">Yes</option></select></div>
+                                <div class="form-group"><label for="Partner">Partner</label><select id="Partner"><option value="Yes">Yes</option><option value="No" selected>No</option></select></div>
+                                <div class="form-group"><label for="Dependents">Dependents</label><select id="Dependents"><option value="Yes">Yes</option><option value="No" selected>No</option></select></div>
+                            </div>
+                        </div>
+                        <div class="form-section">
+                            <h3 class="section-title"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="var(--accent-light)" stroke-width="2"><rect x="2" y="7" width="20" height="15" rx="2"/><path d="M16 3v4M8 3v4"/></svg> Services</h3>
+                            <div class="form-grid">
+                                <div class="form-group"><label for="tenure">Tenure (months)</label><input type="number" id="tenure" value="12" min="0" max="72" required></div>
+                                <div class="form-group"><label for="PhoneService">Phone Service</label><select id="PhoneService"><option value="Yes" selected>Yes</option><option value="No">No</option></select></div>
+                                <div class="form-group"><label for="MultipleLines">Multiple Lines</label><select id="MultipleLines"><option value="Yes">Yes</option><option value="No" selected>No</option><option value="No phone service">No phone service</option></select></div>
+                                <div class="form-group"><label for="InternetService">Internet Service</label><select id="InternetService"><option value="DSL" selected>DSL</option><option value="Fiber optic">Fiber optic</option><option value="No">No</option></select></div>
+                                <div class="form-group"><label for="OnlineSecurity">Online Security</label><select id="OnlineSecurity"><option value="Yes">Yes</option><option value="No" selected>No</option><option value="No internet service">No internet service</option></select></div>
+                                <div class="form-group"><label for="OnlineBackup">Online Backup</label><select id="OnlineBackup"><option value="Yes">Yes</option><option value="No" selected>No</option><option value="No internet service">No internet service</option></select></div>
+                                <div class="form-group"><label for="DeviceProtection">Device Protection</label><select id="DeviceProtection"><option value="Yes">Yes</option><option value="No" selected>No</option><option value="No internet service">No internet service</option></select></div>
+                                <div class="form-group"><label for="TechSupport">Tech Support</label><select id="TechSupport"><option value="Yes">Yes</option><option value="No" selected>No</option><option value="No internet service">No internet service</option></select></div>
+                                <div class="form-group"><label for="StreamingTV">Streaming TV</label><select id="StreamingTV"><option value="Yes">Yes</option><option value="No" selected>No</option><option value="No internet service">No internet service</option></select></div>
+                                <div class="form-group"><label for="StreamingMovies">Streaming Movies</label><select id="StreamingMovies"><option value="Yes">Yes</option><option value="No" selected>No</option><option value="No internet service">No internet service</option></select></div>
+                            </div>
+                        </div>
+                        <div class="form-section form-section-last">
+                            <h3 class="section-title"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="var(--accent-light)" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg> Billing</h3>
+                            <div class="form-grid">
+                                <div class="form-group"><label for="Contract">Contract</label><select id="Contract"><option value="Month-to-month" selected>Month-to-month</option><option value="One year">One year</option><option value="Two year">Two year</option></select></div>
+                                <div class="form-group"><label for="PaperlessBilling">Paperless Billing</label><select id="PaperlessBilling"><option value="Yes" selected>Yes</option><option value="No">No</option></select></div>
+                                <div class="form-group"><label for="PaymentMethod">Payment Method</label><select id="PaymentMethod"><option value="Electronic check" selected>Electronic check</option><option value="Mailed check">Mailed check</option><option value="Bank transfer (automatic)">Bank transfer</option><option value="Credit card (automatic)">Credit card</option></select></div>
+                                <div class="form-group"><label for="MonthlyCharges">Monthly Charges ($)</label><input type="number" id="MonthlyCharges" value="70" min="0" max="200" step="0.01" required></div>
+                                <div class="form-group"><label for="TotalCharges">Total Charges ($)</label><input type="number" id="TotalCharges" value="840" min="0" max="10000" step="0.01" required></div>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-full btn-lg predict-btn" id="predictBtn">
+                            <span id="predictBtnText">
+                                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                                Run Prediction
+                            </span>
+                            <span id="predictSpinner" class="spinner" style="display:none;"></span>
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Results Panel -->
+                <div class="predict-results" id="predictResults" style="display:none;">
+                    <!-- Alerts Banner -->
+                    <div id="alertsContainer" style="display:none;"></div>
+                    <div class="result-card glass-card" id="resultCard">
+                        <div class="result-header" id="resultHeader">
+                            <div class="result-icon" id="resultIcon"></div>
+                            <h3 id="resultTitle">Analyzing...</h3>
+                            <p class="result-subtitle" id="resultSubtitle"></p>
+                        </div>
+                        <div class="probability-ring">
+                            <svg viewBox="0 0 120 120">
+                                <circle cx="60" cy="60" r="52" class="ring-bg"/>
+                                <circle cx="60" cy="60" r="52" class="ring-progress" id="ringProgress"/>
+                            </svg>
+                            <span class="ring-text" id="ringText">0%</span>
+                        </div>
+                        <!-- Risk Level Badge -->
+                        <div class="risk-badge-wrap" id="riskBadgeWrap" style="display:none;">
+                            <span class="risk-badge" id="riskBadge">Low Risk</span>
+                            <span class="risk-score-label" id="riskScoreLabel">Risk Score: 0/100</span>
+                            <span class="risk-score-label" id="segmentLabel" style="margin-top:0.3rem; color:var(--accent-light);">Segment: Unknown</span>
+                        </div>
+                    </div>
+                    <!-- SHAP Feature Importance Chart -->
+                    <div class="shap-card glass-card" id="shapCard" style="display:none;">
+                        <h3><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg> SHAP Feature Importance (Explainable AI)</h3>
+                        <canvas id="shapChart"></canvas>
+                        <p class="shap-note">Positive values push toward churn, negative toward retention</p>
+                    </div>
+                    <div class="explanation-card glass-card" id="explanationCard" style="display:none;">
+                        <h3><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg> Why This Prediction?</h3>
+                        <div id="explanationList"></div>
+                    </div>
+                    <div class="recommendations-card glass-card" id="recsCard" style="display:none;">
+                        <h3><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg> Retention Recommendations</h3>
+                        <div id="recsList"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="page" id="page-bulk">
+            <div class="page-header">
+                <h2>Bulk Prediction & Upload</h2>
+                <p class="subtitle">Upload a CSV file to predict churn for hundreds of customers at once.</p>
+            </div>
+            <div class="glass-card" style="padding: 2rem; text-align: center; max-width: 600px; margin: 0 auto;">
+                <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--accent); margin-bottom: 1rem;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                <h3 style="margin-bottom: 1rem;">Upload Customer Data (CSV)</h3>
+                <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem;">
+                    Ensure your CSV file contains the required columns (e.g., tenure, MonthlyCharges, Contract, etc.).
+                </p>
+                <input type="file" id="bulkFileInput" accept=".csv" style="display: none;">
+                <button class="btn btn-primary" onclick="document.getElementById('bulkFileInput').click()" style="margin-bottom: 1rem;">
+                    Select CSV File
+                </button>
+                <div id="bulkFileName" style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1rem;">No file selected</div>
+                <button class="btn btn-accent" id="bulkPredictBtn" onclick="runBulkPrediction()" disabled>
+                    Run Bulk Prediction
+                </button>
+            </div>
+
+            <!-- Bulk Results Table -->
+            <div class="history-container glass-card" id="bulkResultsContainer" style="display:none; margin-top: 2rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                    <h3>Bulk Prediction Results</h3>
+                    <button class="btn btn-outline btn-sm" id="downloadBulkBtn" onclick="downloadBulkCSV()" style="display:none;">
+                        Download CSV
+                    </button>
+                </div>
+                <div style="overflow-x: auto;">
+                    <table class="history-table" id="bulkResultsTable">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Result</th>
+                                <th>Risk Score</th>
+                                <th>Contract</th>
+                                <th>Tenure</th>
+                                <th>Monthly ($)</th>
+                                <th>Segment</th>
+                            </tr>
+                        </thead>
+                        <tbody id="bulkResultsBody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ═══ DASHBOARD PAGE ═══ -->
+        <section class="page" id="page-dashboard">
+            <div class="page-header"><h2>Analytics Dashboard</h2><p class="subtitle">Real-time churn analytics and model performance</p></div>
+            <div class="stats-grid">
+                <div class="stat-card glass-card stat-purple"><div class="stat-icon-wrap"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div><div class="stat-value" id="statTotal">0</div><div class="stat-label">Total Predictions</div></div>
+                <div class="stat-card glass-card stat-red"><div class="stat-icon-wrap"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div><div class="stat-value" id="statChurn">0</div><div class="stat-label">Churned</div></div>
+                <div class="stat-card glass-card stat-green"><div class="stat-icon-wrap"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div><div class="stat-value" id="statRetained">0</div><div class="stat-label">Retained</div></div>
+                <div class="stat-card glass-card stat-blue"><div class="stat-icon-wrap"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg></div><div class="stat-value" id="statRate">0%</div><div class="stat-label">Churn Rate</div></div>
+            </div>
+            <div class="charts-grid">
+                <div class="chart-card glass-card"><h3>Churn Distribution</h3><canvas id="churnPieChart"></canvas></div>
+                <div class="chart-card glass-card"><h3>Model Comparison (F1 &amp; Accuracy)</h3><canvas id="modelBarChart"></canvas></div>
+            </div>
+            <!-- High-Risk Customers -->
+            <div class="high-risk-section glass-card" id="highRiskSection" style="margin-top:1rem;padding:1.3rem;">
+                <h3 style="font-size:0.95rem;font-weight:700;margin-bottom:0.8rem;display:flex;align-items:center;gap:0.4rem;"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="var(--danger)" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> High-Risk Customers</h3>
+                <div id="highRiskList"><p class="loading-text">No high-risk customers yet.</p></div>
+            </div>
+        </section>
+
+        <!-- ═══ EDA PAGE ═══ -->
+        <section class="page" id="page-eda">
+            <div class="page-header"><h2>Exploratory Data Analysis</h2><p class="subtitle">Simple visualizations to understand the dataset</p></div>
+            <div class="eda-grid" id="edaGrid"><p class="loading-text">Loading EDA visualizations...</p></div>
+        </section>
+
+        <!-- ═══ HISTORY PAGE ═══ -->
+        <section class="page" id="page-history">
+            <div class="page-header">
+                <div class="page-header-row">
+                    <div><h2>Prediction History</h2><p class="subtitle">All past predictions and results</p></div>
+                    <div class="header-actions">
+                        <select class="filter-select" id="historyFilter" onchange="loadHistory()">
+                            <option value="all">All Predictions</option>
+                            <option value="churn">Churn Only</option>
+                            <option value="no_churn">Retained Only</option>
+                        </select>
+                        <a href="/api/export/csv" class="btn btn-outline btn-sm" title="Download CSV">
+                            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                            CSV
+                        </a>
+                        <a href="/api/export/pdf" class="btn btn-outline btn-sm" title="Download PDF">
+                            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                            PDF
+                        </a>
+                        <button class="btn btn-danger btn-sm" id="clearHistoryBtn" onclick="clearHistory()">
+                            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+                            Clear
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="history-chart-row">
+                <div class="chart-card glass-card history-mini-chart"><h3>Churn vs Retained</h3><canvas id="historyPieChart"></canvas></div>
+                <div class="history-stats glass-card" id="historyStatsCard">
+                    <div class="h-stat"><span class="h-stat-value" id="hStatTotal">0</span><span class="h-stat-label">Total</span></div>
+                    <div class="h-stat"><span class="h-stat-value danger" id="hStatChurn">0</span><span class="h-stat-label">Churned</span></div>
+                    <div class="h-stat"><span class="h-stat-value success" id="hStatRetained">0</span><span class="h-stat-label">Retained</span></div>
+                </div>
+            </div>
+            <div class="history-container glass-card" id="historyContainer"><p class="loading-text">Loading history...</p></div>
+        </section>
+
+        <!-- ═══ CHATBOT PAGE ═══ -->
+        <section class="page" id="page-chatbot">
+            <div class="page-header"><h2>AI Churn Advisor</h2><p class="subtitle">Ask questions about churn analysis and retention strategies</p></div>
+            <div class="chat-container glass-card">
+                <div class="chat-messages" id="chatMessages">
+                    <div class="chat-msg bot">
+                        <div class="msg-avatar bot-avatar"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></div>
+                        <div class="msg-content">Hi! I'm the Churn Advisor. Ask me about churn factors, retention strategies, pricing impact, or anything related to customer retention!</div>
+                    </div>
+                </div>
+                <form class="chat-input-form" onsubmit="sendChat(event)">
+                    <input type="text" id="chatInput" placeholder="Ask about churn, contracts, pricing..." autocomplete="off">
+                    <button type="submit" class="btn btn-primary chat-send-btn">
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                    </button>
+                </form>
+            </div>
+            <div class="quick-questions">
+                <button class="quick-btn" onclick="quickChat('What causes customer churn?')">What causes churn?</button>
+                <button class="quick-btn" onclick="quickChat('How to reduce churn?')">Reduce churn</button>
+                <button class="quick-btn" onclick="quickChat('Tell me about contract impact')">Contract impact</button>
+                <button class="quick-btn" onclick="quickChat('How does pricing affect churn?')">Pricing effect</button>
+                <button class="quick-btn" onclick="quickChat('What about tenure and churn?')">Tenure analysis</button>
+                <button class="quick-btn" onclick="quickChat('Explain SHAP values')">SHAP explained</button>
+                <button class="quick-btn" onclick="quickChat('How does risk scoring work?')">Risk scoring</button>
+                <button class="quick-btn" onclick="quickChat('Tell me about model accuracy')">Model accuracy</button>
+            </div>
+        </section>
+
+    </main>
+    <script src="script.js"></script>
+</body>
+</html>
