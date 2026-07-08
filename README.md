@@ -165,8 +165,4 @@ Built as an industry-level ML project demonstrating:
 - REST API design with authentication
 - Database integration and data persistence
 
----
 
-## 📝 License
-
-MIT License
